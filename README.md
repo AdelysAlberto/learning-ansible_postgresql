@@ -1,7 +1,3 @@
-¡Claro, Adelys! Aquí tienes un `README.md` limpio, estructurado y profesional listo para subir a tu repositorio de GitHub:
-
----
-
 ```markdown
 # 🐘 Ansible PostgreSQL + NFS Backup Automation
 
