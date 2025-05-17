@@ -1,0 +1,76 @@
+---
+- name: Configurar Servidor NFS
+  hosts: nfs
+  become: yes
+  tasks:
+    - name: Instalar NFS Server
+      apt:
+        name: nfs-kernel-server
+        state: present
+        update_cache: yes
+
+    - name: Crear directorio para backups
+      file:
+        path: "{{ nfs_directory }}"
+        state: directory
+        mode: '0777'
+
+    - name: Configurar /etc/exports
+      template:
+        src: templates/exports.j2
+        dest: /etc/exports
+        mode: '0644'
+
+    - name: Reiniciar servicio NFS
+      service:
+        name: nfs-kernel-server
+        state: restarted
+        enabled: yes
+
+- name: Configurar Servidor PostgreSQL
+  hosts: postgres
+  become: yes
+  tasks:
+    - name: Instalar PostgreSQL
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+        state: present
+        update_cache: yes
+
+    - name: Crear base de datos
+      become_user: postgres
+      postgresql_db:
+        name: "{{ db_name }}"
+
+    - name: Instalar soporte NFS
+      apt:
+        name: nfs-common
+        state: present
+
+    - name: Crear punto de montaje
+      file:
+        path: "{{ mount_point }}"
+        state: directory
+
+    - name: Montar directorio NFS
+      mount:
+        src: "{{ nfs_server_ip }}:{{ nfs_directory }}"
+        path: "{{ mount_point }}"
+        fstype: nfs
+        opts: defaults
+        state: mounted
+
+    - name: Copiar script de backup
+      copy:
+        src: files/backup.sh
+        dest: /usr/local/bin/backup.sh
+        mode: '0755'
+
+    - name: Agendar backup en cron
+      cron:
+        name: "Backup diario PostgreSQL"
+        minute: "0"
+        hour: "2"
+        job: "/usr/local/bin/backup.sh"

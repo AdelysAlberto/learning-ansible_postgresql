@@ -1,0 +1,18 @@
+all:
+  vars:
+    nfs_directory: /srv/backups
+    mount_point: /mnt/backups
+    db_name: mi_base_de_datos
+    db_user: postgres
+    nfs_server_ip: 192.168.56.11
+  children:
+    postgres:
+      hosts:
+        postgres_server:
+          ansible_host: 192.168.56.10
+          ansible_user: ubuntu
+    nfs:
+      hosts:
+        nfs_server:
+          ansible_host: 192.168.56.11
+          ansible_user: ubuntu
